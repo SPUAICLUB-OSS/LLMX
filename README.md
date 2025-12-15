@@ -26,7 +26,7 @@ LLMX is a native macOS application for training ML models using Apple Silicon an
 ## Installation
 
 ```bash
-git clone https://github.com/spuaiclub/llmx.git
+git clone https://github.com/SPUAICLUB-OSS/LLMX.git
 cd llmx
 pip install mlx pillow h5py
 chmod +x build.sh
