@@ -1,6 +1,6 @@
 # LLMX by SPU AI CLUB
 
-![LLMX](2.png)
+![LLMX](4.png)
 
 ## Overview
 
