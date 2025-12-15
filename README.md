@@ -1,6 +1,6 @@
 # LLMX by SPU AI CLUB
 
-![LLMX](Resources/AppIcon.png)
+![LLMX](2.png)
 
 ## Overview
 
