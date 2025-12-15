@@ -4,37 +4,33 @@
 
 ## Overview
 
-LLMX is a native macOS application for training and running Large Language Models using Apple Silicon and MLX framework. Built with SwiftUI frontend and Python MLX backend, optimized for Apple's AMX (Apple Matrix Extensions) accelerator.
+LLMX is a native macOS application for training ML models using Apple Silicon and MLX framework. Supports LLM training, Image Classification (ResNet, VGG, EfficientNet, MobileNet, ViT), and Object Detection (YOLOv8).
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| Image Classification | ResNet-50/101, VGG-16, EfficientNet, MobileNet, Vision Transformer |
+| Object Detection | YOLOv8n, YOLOv8s, YOLOv8m |
+| LLM Training | Custom transformer models |
+| Real-time Monitor | Loss, Accuracy, Speed, Memory charts |
+| Multi-format Export | CoreML, PyTorch, ONNX, Keras, GGUF |
 
 ## Requirements
 
-- macOS 13.0 or later
+- macOS 13.0+
 - Apple Silicon (M1/M2/M3/M4)
 - Python 3.10+
 - MLX framework
 
 ## Installation
 
-### From DMG
-
-1. Download the latest release DMG
-2. Open the DMG file
-3. Drag LLMX to Applications
-4. Install Python dependencies
-
-### From Source
-
 ```bash
-git clone https://github.com/SPUAICLUB-OSS/LLMX.git
+git clone https://github.com/spuaiclub/llmx.git
 cd llmx
+pip install mlx pillow h5py
 chmod +x build.sh
 ./build.sh
-```
-
-## Python Dependencies
-
-```bash
-pip install mlx mlx-lm numpy
 ```
 
 ## Architecture
@@ -43,7 +39,7 @@ pip install mlx mlx-lm numpy
 LLMX/
 ├── Sources/
 │   ├── main.swift      # SwiftUI Application
-│   ├── linker.swift    # Swift-Python IPC Bridge
+│   ├── linker.swift    # Swift-Python IPC
 │   └── train.py        # MLX Training Backend
 ├── Resources/
 │   └── AppIcon.png
@@ -51,138 +47,100 @@ LLMX/
 └── README.md
 ```
 
-## Components
+## Supported Models
 
-### main.swift
+### Image Classification
 
-SwiftUI application with minimal Apple-style interface featuring three main views:
+| Model | Parameters | Input Size |
+|-------|------------|------------|
+| ResNet-50 | 25M | 224x224 |
+| ResNet-101 | 44M | 224x224 |
+| VGG-16 | 138M | 224x224 |
+| EfficientNet | 5M | 224x224 |
+| MobileNetV2 | 3.4M | 224x224 |
+| Vision Transformer | 86M | 224x224 |
 
-- **Train View**: Configure model path, dataset, epochs, batch size, and learning rate
-- **Monitor View**: Real-time metrics display including loss, epoch progress, iteration speed, and memory usage
-- **Export View**: Export trained models in MLX, GGUF, or SafeTensors format
+### Object Detection
 
-### train.py
+| Model | Parameters | Input Size |
+|-------|------------|------------|
+| YOLOv8n | 3M | 640x640 |
+| YOLOv8s | 11M | 640x640 |
+| YOLOv8m | 25M | 640x640 |
 
-MLX-based training backend with AMX optimization:
+## Dataset Format
 
-- Custom Transformer architecture with MultiHeadAttention and FeedForward layers
-- AMX-optimized matrix operations
-- Cosine learning rate decay with warmup
-- Gradient clipping and weight decay
-- Checkpoint saving and model export
-- JSON-based IPC communication
+### Image Classification
 
-### linker.swift
+```
+dataset/
+├── class1/
+│   ├── image1.jpg
+│   └── image2.png
+├── class2/
+│   └── image3.jpg
+└── class3/
+    └── image4.png
+```
 
-Swift-Python bridge for inter-process communication:
-
-- Process management for Python backend
-- JSON-based command protocol
-- Real-time metrics streaming
-- Async training control
-
-## Usage
-
-### Training
-
-1. Launch LLMX
-2. Select model path or enter HuggingFace model ID
-3. Select training dataset (supports .bin, .json, .txt)
-4. Configure training parameters
-5. Click "Start Training"
-
-### Supported Dataset Formats
+### LLM Training
 
 | Format | Description |
 |--------|-------------|
+| Folder | Directory with data files |
 | .bin | Raw token IDs (int32) |
-| .json | JSON array of token sequences |
-| .txt | Plain text (character-level) |
+| .json | JSON with tokens/text |
+| .jsonl | JSON Lines format |
+| .txt | Plain text |
 
-### Export Formats
+## Export Formats
 
-| Format | Description |
-|--------|-------------|
-| MLX | Native MLX safetensors |
-| GGUF | llama.cpp compatible |
-| SafeTensors | HuggingFace compatible |
+| Format | Extension | Use Case |
+|--------|-----------|----------|
+| CoreML | .mlmodel | iOS/macOS deployment |
+| MLX | .safetensors | MLX inference |
+| PyTorch | .pt | PyTorch ecosystem |
+| ONNX | .onnx | Cross-platform |
+| Keras | .h5 | TensorFlow/Keras |
+| GGUF | .gguf | llama.cpp |
 
-## Configuration
-
-### Training Parameters
+## Training Parameters
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| epochs | 10 | Number of training epochs |
+| epochs | 10 | Training iterations |
 | batch_size | 32 | Samples per batch |
-| learning_rate | 1e-4 | Initial learning rate |
-| max_seq_len | 512 | Maximum sequence length |
-| warmup_steps | 100 | LR warmup steps |
-| weight_decay | 0.01 | AdamW weight decay |
-| grad_clip | 1.0 | Gradient clipping threshold |
+| learning_rate | 1e-4 | Initial LR |
+| image_size | 224 | Input resolution |
+| augmentation | true | Data augmentation |
+| pretrained | true | Use pretrained weights |
 
-### Model Architecture
+## Real-time Monitoring
 
-| Parameter | Default |
-|-----------|---------|
-| dims | 768 |
-| num_layers | 12 |
-| num_heads | 12 |
-| hidden_dims | 3072 |
-
-## API
-
-### IPC Commands
-
-```json
-{"action": "train", "model_path": "...", "data_path": "...", "epochs": 10}
-{"action": "stop"}
-{"action": "export", "output_path": "...", "format": "mlx"}
-```
-
-### Response Types
-
-```json
-{"type": "ready"}
-{"type": "log", "message": "..."}
-{"type": "metrics", "loss": 0.5, "epoch": 1, "iter_per_sec": 10.0}
-{"type": "completed", "success": true}
-```
-
-## Performance
-
-### Apple Silicon Optimization
-
-- Native ARM64 compilation
-- MLX Metal GPU acceleration
-- AMX matrix coprocessor utilization
-- Unified memory architecture support
-
-### Benchmarks (M3 Max)
-
-| Model Size | Tokens/sec |
-|------------|------------|
-| 125M | ~15,000 |
-| 350M | ~8,000 |
-| 1.3B | ~2,500 |
+- Loss curve
+- Accuracy curve
+- Learning rate schedule
+- GPU memory usage
+- Training speed (it/s)
+- Training log
 
 ## Building
-
-### Requirements
-
-- Xcode Command Line Tools
-- Swift 5.9+
-
-### Build Commands
 
 ```bash
 ./build.sh
 ```
 
-### Output
+Output:
+- `build/LLMX.app`
+- `build/LLMX-1.0.0.dmg`
 
-- `build/LLMX.app` - macOS Application
-- `build/LLMX-1.0.0.dmg` - Distributable DMG
+## Python Dependencies
+
+```bash
+pip install mlx pillow h5py numpy
+pip install torch  # for .pt export
+pip install onnx   # for .onnx export
+```
 
 ## License
 
@@ -190,12 +148,5 @@ MIT License
 
 ## Credits
 
-Developed by SPU AI CLUB (AIPRENEUR)
-
+SPU AI CLUB (AIPRENEUR) | Dotmini Software
 Sripatum University
-
-## Links
-
-- [MLX Documentation](https://ml-explore.github.io/mlx/)
-- [Apple Silicon Developer](https://developer.apple.com/silicon/)
-- [SPU AI CLUB](https://github.com/spuaiclub)
